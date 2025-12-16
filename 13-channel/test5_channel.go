@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-func fibonacii(c, quit chan int) {
+func fibonacii(c chan int, quit chan struct{}) {
 	x, y := 1, 1
 
 	for {
@@ -11,16 +11,18 @@ func fibonacii(c, quit chan int) {
 			//如果c可写，则该case就会进来
 			x = y
 			y = x + y
-		case <-quit:
-			fmt.Println("quit")
+		case value := <-quit:
+			fmt.Println("quit", value)
 			return
+		default:
+			fmt.Println("default")
 		}
 	}
 }
 
 func main() {
 	c := make(chan int)
-	quit := make(chan int)
+	quit := make(chan struct{})
 
 	//sub go
 	go func() {
@@ -28,7 +30,7 @@ func main() {
 			fmt.Println(<-c)
 		}
 
-		quit <- 0
+		close(quit)
 	}()
 
 	//main go
